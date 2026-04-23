@@ -28,7 +28,8 @@ router.post('/register', protect, adminOnly, async (req, res) => {
 });
 
 router.post('/setup', async (req, res) => {
-  await User.deleteMany({});  // ← TEMP: clears ghost users
+  const count = await User.countDocuments();
+  if (count > 0) return res.status(403).json({ success: false, message: 'Setup already done' });
   try {
     const user = await User.create({ ...req.body, role: 'admin' });
     res.status(201).json({ success: true, token: signToken(user._id), message: 'Admin created' });
@@ -36,7 +37,6 @@ router.post('/setup', async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 });
-
 
 // @GET /api/auth/me
 router.get('/me', protect, (req, res) => res.json({ success: true, user: req.user }));
